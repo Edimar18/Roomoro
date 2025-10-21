@@ -5,7 +5,7 @@ import 'chat_screen.dart';
 import 'profile_screen.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
+  const HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -32,26 +32,27 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: _widgetOptions.elementAt(_selectedIndex),
       bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.map),
             label: 'Map',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.list),
+            icon: Icon(Icons.list_alt_outlined),
             label: 'Listing',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
+            icon: Icon(Icons.chat_bubble),
             label: 'Chat',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(Icons.person_2_rounded),
             label: 'Profile',
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.teal, // You can choose your primary color
+        selectedItemColor: Colors.orangeAccent, // You can choose your primary color
         unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
       ),
