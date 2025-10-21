@@ -30,20 +30,8 @@ class RoomListing {
     // Cast the document data to a map
     final data = doc.data() as Map<String, dynamic>;
 
-    // --- 1. PARSE THE LOCATION STRING ---
-    GeoPoint parsedLocation;
-    final locationString = data['location'] as String? ?? '0 N, 0 E';
-    try {
-      // Split the string by the comma and "N,"
-      final parts = locationString.replaceAll(' N,', '').replaceAll(' E', '').split(' ');
-      final lat = double.parse(parts[0]);
-      final lon = double.parse(parts[1]);
-      parsedLocation = GeoPoint(lat, lon);
-    } catch (e) {
-      // If parsing fails, default to a zero location
-      print('Error parsing location string: $e');
-      parsedLocation = const GeoPoint(0, 0);
-    }
+    final locationData = data['location'] as GeoPoint? ?? const GeoPoint(0, 0);
+
 
     // --- 2. MAP FIREBASE FIELDS TO YOUR MODEL ---
     return RoomListing(
@@ -57,7 +45,7 @@ class RoomListing {
       amenities: List<String>.from(data['amenities'] as List? ?? []),
       ownerId: data['ownerId'] as String? ?? '',
       // Assign the parsed GeoPoint
-      location: parsedLocation,
+      location: locationData,
     );
   }
 }

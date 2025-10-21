@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "155732320313",
+    "project_id": "roomoro-a1317",
+    "storage_bucket": "roomoro-a1317.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:155732320313:android:82e06d015ac7ceea9f6de8",
+        "android_client_info": {
+          "package_name": "com.jegr.inc.roomoro"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA3hRhvISr8GNt3OSyCnHot89aJJGCtWkk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

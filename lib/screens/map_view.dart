@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-// Import your new model
+import '../screens/listing_details_screen.dart';
 import '../models/room_listing.dart';
 
 
@@ -88,7 +88,7 @@ class _MapScreenState extends State<MapScreen> {
             print("Tapped on: ${listing.title}");
           },
           child: Icon(
-            Icons.home_max_rounded, // A different icon for rooms
+            Icons.home_filled, // A different icon for rooms
             color: _selectedListing?.id == listing.id ? Colors.purple : Colors.blue, // Highlight selected
             size: 40.0,
           ),
@@ -205,67 +205,106 @@ class _MapScreenState extends State<MapScreen> {
 
   // --- NEW: WIDGET FOR THE LISTING INFO CARD ---
   Widget _buildListingInfoCard(RoomListing listing) {
-    return GestureDetector(
-      onTap: () {
-        // Optional: Navigate to a full details page
-        print("Tapped on card for ${listing.title}");
-      },
-      child: Card(
-        margin: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-        elevation: 8,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        child: Container(
-          height: 120,
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            children: [
-              // Image
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  listing.imageUrl,
-                  width: 100,
-                  height: 100,
-                  fit: BoxFit.cover,
-                  // Simple loading and error widgets
-                  loadingBuilder: (context, child, progress) => progress == null ? child : Center(child: CircularProgressIndicator()),
-                  errorBuilder: (context, error, stack) => Icon(Icons.broken_image, size: 50),
-                ),
-              ),
-              const SizedBox(width: 10),
-              // Details
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    Text(
+    return Card(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 30), // Adjust margin for a floating look
+      elevation: 8,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      clipBehavior: Clip.antiAlias, // Ensures the content respects the rounded corners
+      child: Container(
+        color: Colors.white,
+        height: 150, // Increased height to fit new layout
+        padding: const EdgeInsets.all(12.0),
+        child: Row(
+          children: [
+            // --- Left Side: Details ---
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  // Likes Count
+                  Row(
+                    children: [
+                      Icon(Icons.favorite, color: Colors.pink[400], size: 18),
+                      const SizedBox(width: 4),
+                      Text(
+                        '${listing.likes} likes',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Title
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4.0),
+                    child: Text(
                       listing.title,
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 17,
+                        color: Color(0xFF1A237E), // A dark blue color
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    Text(
-                      '₱${listing.price.toStringAsFixed(2)} / month',
-                      style: const TextStyle(fontSize: 14, color: Colors.green),
+                  ),
+                  // Price
+                  Text(
+                    '₱${listing.price.toStringAsFixed(0)}/month', // Using toStringAsFixed(0) for whole numbers
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Colors.grey[800],
+                      fontWeight: FontWeight.w600,
                     ),
-                  ],
-                ),
+                  ),
+                  const Spacer(), // Pushes the button to the bottom
+                  // View Details Button
+                  SizedBox(
+                    height: 36,
+                    child: ElevatedButton(
+                      onPressed: () {
+                        print("Navigating to details for ${listing.title}");
+                        // --- NAVIGATION LOGIC ---
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ListingDetailsScreen(listing: listing),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal, // Button color
+                        foregroundColor: Colors.white, // Text color
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                      ),
+                      child: const Text('View Details'),
+                    ),
+                  ),
+                ],
               ),
-              // Close button
-              Align(
-                alignment: Alignment.topRight,
-                child: IconButton(
-                  icon: Icon(Icons.close),
-                  onPressed: () {
-                    setState(() {
-                      _selectedListing = null;
-                    });
-                  },
-                ),
-              )
-            ],
-          ),
+            ),
+            const SizedBox(width: 12),
+            // --- Right Side: Image ---
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
+                listing.imageUrl,
+                width: 125,
+                height: 125,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, progress) =>
+                progress == null ? child : const Center(child: CircularProgressIndicator()),
+                errorBuilder: (context, error, stack) =>
+                const Icon(Icons.broken_image, size: 60, color: Colors.grey),
+              ),
+            ),
+          ],
         ),
       ),
     );
