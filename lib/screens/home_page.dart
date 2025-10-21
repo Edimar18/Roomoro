@@ -39,20 +39,20 @@ class _HomePageState extends State<HomePage> {
             label: 'Map',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.list),
+            icon: Icon(Icons.list_alt_outlined),
             label: 'Listing',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
+            icon: Icon(Icons.chat_bubble),
             label: 'Chat',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person),
+            icon: Icon(Icons.person_2_rounded),
             label: 'Profile',
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.teal, // You can choose your primary color
+        selectedItemColor: Colors.orangeAccent, // You can choose your primary color
         unselectedItemColor: Colors.grey,
         onTap: _onItemTapped,
       ),
