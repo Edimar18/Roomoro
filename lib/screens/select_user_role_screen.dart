@@ -43,7 +43,7 @@ class _SelectUserRoleScreenState extends State<SelectUserRoleScreen> {
 
     try {
       // Update user role in Firestore
-      await _firestoreService.updateUserRole(user.uid, 'Renter');
+      await _firestoreService.updateUserRole(user.uid, 'renter');
 
       if (!mounted) return;
 
@@ -70,7 +70,7 @@ class _SelectUserRoleScreenState extends State<SelectUserRoleScreen> {
 
     try {
       // Update user role in Firestore
-      await _firestoreService.updateUserRole(user.uid, 'Room Seeker');
+      await _firestoreService.updateUserRole(user.uid, 'owner');
 
       if (!mounted) return;
 
