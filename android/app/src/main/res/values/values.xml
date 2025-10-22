@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Roomoro</string>
+    <string name="facebook_app_id">827230779993885</string>
+    <string name="fb_login_protocol_scheme">fbTransform Selected Code…</string>
+    <string name="facebook_client_token">55445457de34e7f9492ca12bec6eba2b</string>
+</resources>
