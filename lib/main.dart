@@ -3,6 +3,9 @@ import 'screens/home_page.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:roomoro/screens/welcomeScreen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -25,7 +28,19 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.teal,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: const WelcomeScreen(),
+      home: StreamBuilder(
+          stream: FirebaseAuth.instance.authStateChanges(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasData) {
+              return const HomePage();
+            }
+            return const WelcomeScreen();
+          }
+
+
+      ),
     );
   }
 }
