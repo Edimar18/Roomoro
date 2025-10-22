@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'screens/home_page.dart';
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
-
+import 'package:roomoro/screens/welcomeScreen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.teal,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: const HomePage(),
+      home: const WelcomeScreen(),
     );
   }
 }
