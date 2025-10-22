@@ -5,7 +5,7 @@ import 'package:roomoro/screens/select_user_role_screen.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:roomoro/services/firestore_service.dart';
-
+import 'package:url_launcher/url_launcher.dart';
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
 
@@ -22,6 +22,15 @@ class _SignupScreenState extends State<SignupScreen> {
   bool _isPasswordVisible = false;
   bool _agreeToTerms = false;
   bool _isLoading = false;
+
+
+  Future<void> _launchURL(String url) async {
+    final Uri uri = Uri.parse(url);
+    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
+      // You can show an error to the user here
+      throw 'Could not launch $url';
+    }
+  }
 
   @override
   void dispose() {
@@ -300,7 +309,10 @@ class _SignupScreenState extends State<SignupScreen> {
                     child: Text('I agree to the '),
                   ),
                   TextButton(
-                      onPressed: () {}, child: const Text('Terms and Conditions')),
+                      onPressed: () {
+                        // go to terms and services website page
+                        _launchURL("https://www.freeprivacypolicy.com/live/3e5c0bee-f714-4ffa-8fe9-3af9e6e4aa11");
+                      }, child: const Text('Terms and Conditions')),
                 ],
               ),
               const SizedBox(height: 24),
