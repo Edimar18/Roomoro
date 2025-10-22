@@ -12,7 +12,20 @@
           "package_name": "com.jegr.inc.roomoro"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "155732320313-f1chb80hmv7m0jgbjcf7nkmobl9q238n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.jegr.inc.roomoro",
+            "certificate_hash": "85401a4fd1cb338cbea3a370ad5b14fe680f2a6f"
+          }
+        },
+        {
+          "client_id": "155732320313-cs9abgge6asnoka9llii14li2jpd5un6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyA3hRhvISr8GNt3OSyCnHot89aJJGCtWkk"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "155732320313-cs9abgge6asnoka9llii14li2jpd5un6.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "155732320313-nr5seefr9l5j6msjit5utuuhi2gp6cod.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.jegr.inc.roomoro"
+              }
+            }
+          ]
         }
       }
     }
