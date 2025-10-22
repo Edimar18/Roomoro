@@ -13,23 +13,46 @@ class ListingScreen extends StatefulWidget {
 }
 
 class _ListingsScreenState extends State<ListingScreen> {
+  final Set<String> _likedListingIds = {};
   // Reference to the listings collection in Firestore
   final listingsRef = FirebaseFirestore.instance.collection('listings');
 
   // --- Like/Unlike Functionality ---
   // This function will be called when the heart icon is tapped
-  Future<void> _toggleLike(String listingId, int currentLikes, bool isLiked) async {
-    // We use a transaction to safely update the like count,
-    // preventing issues if multiple users like it at the same time.
-    await FirebaseFirestore.instance.runTransaction((transaction) async {
-      final docRef = listingsRef.doc(listingId);
-      final newLikes = isLiked ? currentLikes - 1 : currentLikes + 1;
-      transaction.update(docRef, {'likes': newLikes});
+  Future<void> _toggleLike(String listingId, int currentLikes) async {
+    // --- NEW: Update the local state for an instant UI change ---
+    final isCurrentlyLiked = _likedListingIds.contains(listingId);
+    setState(() {
+      if (isCurrentlyLiked) {
+        _likedListingIds.remove(listingId);
+      } else {
+        _likedListingIds.add(listingId);
+      }
     });
-    // For now, we assume the user has a local list of liked items.
-    // A more advanced implementation would save this to the user's profile.
-    print("Toggled like for $listingId. New optimistic state: ${!isLiked}");
+    // ---
+
+    // The database update logic remains the same
+    try {
+      await FirebaseFirestore.instance.runTransaction((transaction) async {
+        final docRef = listingsRef.doc(listingId);
+        // Use the 'isCurrentlyLiked' status to determine the new count
+        final newLikes = isCurrentlyLiked ? currentLikes - 1 : currentLikes + 1;
+        transaction.update(docRef, {'likes': newLikes});
+      });
+      print("Toggled like for $listingId.");
+    } catch (e) {
+      print("Error toggling like: $e");
+      // Optional: Revert the UI change if the database update fails
+      setState(() {
+        if (isCurrentlyLiked) {
+          _likedListingIds.add(listingId);
+        } else {
+          _likedListingIds.remove(listingId);
+        }
+      });
+    }
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +80,7 @@ class _ListingsScreenState extends State<ListingScreen> {
         child: Icon(Icons.maps_home_work_outlined, color: Colors.grey[800], size: 28),
       ),
       title: Text(
-        'Roomi',
+        'Roomoro',
         style: TextStyle(
           color: Colors.grey[850],
           fontWeight: FontWeight.bold,
@@ -140,11 +163,11 @@ class _ListingsScreenState extends State<ListingScreen> {
             final listing = listings[index];
             // Here you would check if the user has liked this item before.
             // For this example, we'll just pass a dummy `false` value.
-            const isLiked = false;
+            final isLiked = _likedListingIds.contains(listing.id);
             return ListingCard(
               listing: listing,
               isLiked: isLiked, // You would get this from user's saved preferences
-              onLikeToggle: () => _toggleLike(listing.id, listing.likes, isLiked),
+              onLikeToggle: () => _toggleLike(listing.id, listing.likes),
             );
           },
         );
