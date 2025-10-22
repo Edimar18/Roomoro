@@ -2,9 +2,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:roomoro/screens/login_screen.dart';
 import 'package:roomoro/screens/select_user_role_screen.dart';
-import 'package:google_sign_in/google_sign_in.dart'; // <-- ADD THIS IMPORT
-import 'package:flutter_facebook_auth/flutter_facebook_auth.dart'; // <-- ADD THIS
-
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
+import 'package:roomoro/services/firestore_service.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -18,9 +18,10 @@ class _SignupScreenState extends State<SignupScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _firestoreService = FirestoreService();
   bool _isPasswordVisible = false;
   bool _agreeToTerms = false;
-  bool _isLoading = false; // To show a loading indicator
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -32,8 +33,6 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Future<void> initGoogleSignInOnce() async {
-    // Optional: pass serverClientId if required (often needed on Android 7.1.x)
-    // await GoogleSignIn.instance.initialize(serverClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com');
     await GoogleSignIn.instance.initialize();
   }
 
@@ -41,9 +40,8 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => _isLoading = true);
     try {
       await initGoogleSignInOnce();
-      // Start interactive auth flow
-      final GoogleSignInAccount? account =  await GoogleSignIn.instance.authenticate();
-      await GoogleSignIn.instance.authenticate(); // Replaces signIn() in v7+ [web:6][web:21][web:15]
+      final GoogleSignInAccount? account = await GoogleSignIn.instance.authenticate();
+
       if (account == null) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -52,8 +50,7 @@ class _SignupScreenState extends State<SignupScreen> {
         return;
       }
 
-      // Fetch tokens (idToken is used for Firebase)
-      final auth = await account.authentication; // Provides idToken in v7+ [web:6][web:15]
+      final auth = await account.authentication;
       final idToken = auth.idToken;
       if (idToken == null) {
         _showErrorDialog('Failed to get Google ID token.');
@@ -61,7 +58,15 @@ class _SignupScreenState extends State<SignupScreen> {
       }
 
       final credential = GoogleAuthProvider.credential(idToken: idToken);
-      await FirebaseAuth.instance.signInWithCredential(credential); // Firebase accepts idToken [web:27][web:20]
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+
+      // Save user to Firestore
+      if (userCredential.user != null) {
+        await _firestoreService.saveUser(
+          user: userCredential.user!,
+          fullName: userCredential.user!.displayName,
+        );
+      }
 
       if (!mounted) return;
       Navigator.pushReplacement(
@@ -76,6 +81,7 @@ class _SignupScreenState extends State<SignupScreen> {
   }
 
   Future<void> _loginWithFacebook() async {
+    setState(() => _isLoading = true);
     try {
       final LoginResult result = await FacebookAuth.instance.login();
 
@@ -84,22 +90,31 @@ class _SignupScreenState extends State<SignupScreen> {
         final OAuthCredential credential =
         FacebookAuthProvider.credential(accessToken.tokenString);
 
-        await FirebaseAuth.instance.signInWithCredential(credential);
+        final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+
+        // Save user to Firestore
+        if (userCredential.user != null) {
+          await _firestoreService.saveUser(
+            user: userCredential.user!,
+            fullName: userCredential.user!.displayName,
+          );
+        }
 
         if (mounted) {
           Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => const SelectUserRoleScreen()));
+            context,
+            MaterialPageRoute(builder: (context) => const SelectUserRoleScreen()),
+          );
         }
       } else if (result.status == LoginStatus.cancelled) {
         // User cancelled the login
       } else {
-        _showErrorDialog(
-            result.message ?? 'Failed to sign in with Facebook.');
+        _showErrorDialog(result.message ?? 'Failed to sign in with Facebook.');
       }
     } catch (e) {
       _showErrorDialog('Failed to sign in with Facebook. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -141,14 +156,22 @@ class _SignupScreenState extends State<SignupScreen> {
         password: _passwordController.text.trim(),
       );
 
-      // Optionally, update the user's profile with their full name
+      // Update display name
       await credential.user?.updateDisplayName(_fullNameController.text.trim());
+
+      // Save user to Firestore
+      if (credential.user != null) {
+        await _firestoreService.saveUser(
+          user: credential.user!,
+          fullName: _fullNameController.text.trim(),
+        );
+      }
 
       if (mounted) {
         Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-                builder: (context) => const SelectUserRoleScreen()));
+          context,
+          MaterialPageRoute(builder: (context) => const SelectUserRoleScreen()),
+        );
       }
     } on FirebaseAuthException catch (e) {
       String errorMessage = 'An error occurred. Please try again.';
@@ -296,7 +319,6 @@ class _SignupScreenState extends State<SignupScreen> {
                     : const Text('Sign Up',
                     style: TextStyle(color: Colors.white, fontSize: 18)),
               ),
-
               const SizedBox(height: 24),
               const Row(
                 children: <Widget>[
@@ -312,7 +334,7 @@ class _SignupScreenState extends State<SignupScreen> {
               OutlinedButton.icon(
                 icon: const Icon(Icons.g_mobiledata, color: Colors.red),
                 label: const Text('Continue with Google'),
-                onPressed: _isLoading ? null : _loginWithGoogle, // <-- CONNECT THE FUNCTION
+                onPressed: _isLoading ? null : _loginWithGoogle,
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   side: const BorderSide(color: Colors.grey),
@@ -321,13 +343,11 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
               ),
-
-              // --- START: ADD THE FACEBOOK BUTTON HERE ---
               const SizedBox(height: 12),
               OutlinedButton.icon(
                 icon: const Icon(Icons.facebook, color: Colors.blue),
                 label: const Text('Continue with Facebook'),
-                onPressed: _isLoading ? null : _loginWithFacebook, // <-- CONNECT THE FUNCTION
+                onPressed: _isLoading ? null : _loginWithFacebook,
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   side: const BorderSide(color: Colors.grey),
@@ -336,9 +356,6 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
               ),
-              // --- END: ADD THE FACEBOOK BUTTON HERE ---
-
-
               const SizedBox(height: 40),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,

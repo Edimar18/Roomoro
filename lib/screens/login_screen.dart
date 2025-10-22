@@ -1,10 +1,12 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:roomoro/screens/signup_screen.dart';
 import 'package:roomoro/screens/select_user_role_screen.dart';
-
+import 'package:roomoro/services/firestore_service.dart';
+import 'package:roomoro/screens/home_page.dart';
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -15,6 +17,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _firestoreService = FirestoreService();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
 
@@ -43,23 +46,45 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
+  Future<void> _handleSuccessfulLogin(User user) async {
+    // Check if user has a role
+    final userDoc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+
+    if (mounted) {
+      if (userDoc.exists && userDoc.data()!.containsKey('role')) {
+        // Role exists, go to home page
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+      } else {
+        // No role, go to select user role screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const SelectUserRoleScreen()),
+        );
+      }
+    }
+  }
+
   Future<void> _login() async {
     setState(() {
       _isLoading = true;
     });
 
     try {
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
+      final userCredential = await FirebaseAuth.instance.signInWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      if (mounted) {
-        Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-                builder: (context) => const SelectUserRoleScreen()));
+      // Check if user exists in Firestore, if not create record
+      if (userCredential.user != null) {
+        await _firestoreService.saveUser(user: userCredential.user!);
+        await _handleSuccessfulLogin(userCredential.user!);
       }
+
+
     } on FirebaseAuthException catch (e) {
       String errorMessage = 'An error occurred. Please check your credentials.';
       if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
@@ -79,23 +104,16 @@ class _LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  // --- START: Implemented _loginWithGoogle() ---
-  // --- START: Corrected _loginWithGoogle() ---
   Future<void> initGoogleSignInOnce() async {
-    // Optional: pass serverClientId if required (often needed on Android 7.1.x)
-    // await GoogleSignIn.instance.initialize(serverClientId: 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com');
     await GoogleSignIn.instance.initialize();
   }
 
   Future<void> _loginWithGoogle() async {
     setState(() => _isLoading = true);
     try {
-      // Ensure initialized exactly once before any other calls
-      await initGoogleSignInOnce(); // initialize is required in v7+ [web:6][web:15]
+      await initGoogleSignInOnce();
+      final GoogleSignInAccount? account = await GoogleSignIn.instance.authenticate();
 
-      // Start interactive auth flow
-      final GoogleSignInAccount? account =
-      await GoogleSignIn.instance.authenticate(); // Replaces signIn() in v7+ [web:6][web:21][web:15]
       if (account == null) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -104,8 +122,7 @@ class _LoginScreenState extends State<LoginScreen> {
         return;
       }
 
-      // Fetch tokens (idToken is used for Firebase)
-      final auth = await account.authentication; // Provides idToken in v7+ [web:6][web:15]
+      final auth = await account.authentication;
       final idToken = auth.idToken;
       if (idToken == null) {
         _showErrorDialog('Failed to get Google ID token.');
@@ -113,7 +130,15 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       final credential = GoogleAuthProvider.credential(idToken: idToken);
-      await FirebaseAuth.instance.signInWithCredential(credential); // Firebase accepts idToken [web:27][web:20]
+      final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+
+      // Save user to Firestore (will only create if doesn't exist)
+      if (userCredential.user != null) {
+        await _firestoreService.saveUser(
+          user: userCredential.user!,
+          fullName: userCredential.user!.displayName,
+        );
+      }
 
       if (!mounted) return;
       Navigator.pushReplacement(
@@ -126,11 +151,9 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
-// --- END: Corrected _loginWithGoogle() ---
-
-  // --- END: Implemented _loginWithGoogle() ---
 
   Future<void> _loginWithFacebook() async {
+    setState(() => _isLoading = true);
     try {
       final LoginResult result = await FacebookAuth.instance.login();
 
@@ -139,22 +162,31 @@ class _LoginScreenState extends State<LoginScreen> {
         final OAuthCredential credential =
         FacebookAuthProvider.credential(accessToken.tokenString);
 
-        await FirebaseAuth.instance.signInWithCredential(credential);
+        final userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+
+        // Save user to Firestore (will only create if doesn't exist)
+        if (userCredential.user != null) {
+          await _firestoreService.saveUser(
+            user: userCredential.user!,
+            fullName: userCredential.user!.displayName,
+          );
+        }
 
         if (mounted) {
           Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => const SelectUserRoleScreen()));
+            context,
+            MaterialPageRoute(builder: (context) => const SelectUserRoleScreen()),
+          );
         }
       } else if (result.status == LoginStatus.cancelled) {
         // User cancelled the login
       } else {
-        _showErrorDialog(
-            result.message ?? 'Failed to sign in with Facebook.');
+        _showErrorDialog(result.message ?? 'Failed to sign in with Facebook.');
       }
     } catch (e) {
       _showErrorDialog('Failed to sign in with Facebook. Please try again.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -168,23 +200,22 @@ class _LoginScreenState extends State<LoginScreen> {
       await FirebaseAuth.instance
           .sendPasswordResetEmail(email: _emailController.text.trim());
       showDialog(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Password Reset'),
-            content: const Text(
-                'A password reset link has been sent to your email.'),
-            actions: <Widget>[
-              TextButton(
-                child: const Text('Okay'),
-                onPressed: () {
-                  Navigator.of(ctx).pop();
-                },
-              )
-            ],
-          ));
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Password Reset'),
+          content: const Text('A password reset link has been sent to your email.'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Okay'),
+              onPressed: () {
+                Navigator.of(ctx).pop();
+              },
+            )
+          ],
+        ),
+      );
     } on FirebaseAuthException catch (e) {
-      _showErrorDialog(
-          e.message ?? 'Failed to send password reset email.');
+      _showErrorDialog(e.message ?? 'Failed to send password reset email.');
     }
   }
 
@@ -297,7 +328,7 @@ class _LoginScreenState extends State<LoginScreen> {
               OutlinedButton.icon(
                 icon: const Icon(Icons.g_mobiledata, color: Colors.red),
                 label: const Text('Continue with Google'),
-                onPressed: _loginWithGoogle,
+                onPressed: _isLoading ? null : _loginWithGoogle,
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   side: const BorderSide(color: Colors.grey),
@@ -310,7 +341,7 @@ class _LoginScreenState extends State<LoginScreen> {
               OutlinedButton.icon(
                 icon: const Icon(Icons.facebook, color: Colors.blue),
                 label: const Text('Continue with Facebook'),
-                onPressed: _loginWithFacebook,
+                onPressed: _isLoading ? null : _loginWithFacebook,
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   side: const BorderSide(color: Colors.grey),
