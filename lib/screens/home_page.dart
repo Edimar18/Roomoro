@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'map_view.dart';
 import 'listing_screen.dart';
-import 'chat_screen.dart';
+import 'chat_list_screen.dart';
 import 'profile_screen.dart';
 
 class HomePage extends StatefulWidget {
@@ -17,7 +17,7 @@ class _HomePageState extends State<HomePage> {
   static const List<Widget> _widgetOptions = <Widget>[
     MapScreen(),
     ListingScreen(),
-    ChatScreen(),
+    ChatListScreen(),
     ProfileScreen(),
   ];
 

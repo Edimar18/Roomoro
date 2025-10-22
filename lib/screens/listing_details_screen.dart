@@ -2,7 +2,9 @@
 import 'package:flutter/material.dart';
 import '../models/room_listing.dart';
 import 'package:roomoro/services/firestore_service.dart';
-
+import 'package:roomoro/services/chatService.dart';
+import 'package:roomoro/screens/chat_list_screen.dart';
+import 'package:roomoro/screens/conversation_screen.dart';
 
 class ListingDetailsScreen extends StatefulWidget {
   final RoomListing listing;
@@ -15,6 +17,7 @@ class ListingDetailsScreen extends StatefulWidget {
 }
 
 class _ListingDetailsScreenState extends State<ListingDetailsScreen> {
+  final _chatService = ChatService(); // Create an instance of ChatService
   final _fireStoreService = FirestoreService();
   @override
   Widget build(BuildContext context) {
@@ -124,16 +127,27 @@ class _ListingDetailsScreenState extends State<ListingDetailsScreen> {
               SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                      onPressed: () {
-                        // magbutang dre ug function para chat sa seller
-                        // TODO: Implement chat functionality with Firebase
-                        // 1. Get current user ID and owner ID (listing.ownerId)
-                        // 2. Check if a chat session already exists.
-                        // 3. If it exists, navigate to the ChatScreen with the existing chat ID.
-                        // 4. If not, create a new chat session in Firestore.
-                        // 5. Navigate to the ChatScreen with the new chat ID.
 
+
+                      onPressed: () async {
+                        try {
+                          // magbutang dre ug function para chat sa seller
+                          final chatId = await _chatService
+                              .getOrCreateChatSession(widget.listing.ownerId);
+
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (context) =>
+                                  ConversationScreen(chatId: chatId),
+                              )
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to start a chat: ${e.toString()}.'))
+                          );
+                        }
                       },
+
                       icon: const Icon(Icons.message, color: Colors.white),
                       label: const Text('Message seller', style: TextStyle(color: Colors.white)),
                       style: ElevatedButton.styleFrom(
