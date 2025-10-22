@@ -111,7 +111,7 @@ class _SelectUserRoleScreenState extends State<SelectUserRoleScreen> {
                 const Icon(Icons.home_work_outlined, size: 60, color: Colors.blue),
                 const SizedBox(height: 20),
                 const Text(
-                  'Welcome to Roomie!',
+                  'Welcome to Roomoro!',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 28,
