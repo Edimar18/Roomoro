@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:roomoro/services/firestore_service.dart';
 import 'package:roomoro/screens/welcomeScreen.dart';
+import 'package:roomoro/screens/add_listing_screen.dart';
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
 
@@ -79,7 +80,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const AddListingScreen()),
+                        );
+                      },
                       icon: const Icon(Icons.add),
                       label: const Text('Add Room'),
                       style: ElevatedButton.styleFrom(

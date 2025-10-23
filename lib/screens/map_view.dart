@@ -294,7 +294,7 @@ class _MapScreenState extends State<MapScreen> {
             ClipRRect(
               borderRadius: BorderRadius.circular(12),
               child: Image.network(
-                listing.imageUrl,
+                listing.thumbnailUrl2,
                 width: 125,
                 height: 125,
                 fit: BoxFit.cover,

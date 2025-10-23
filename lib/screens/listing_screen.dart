@@ -214,7 +214,7 @@ class ListingCard extends StatelessWidget {
             Stack(
               children: [
                 Image.network(
-                  listing.imageUrl,
+                  listing.thumbnailUrl1,
                   height: 180,
                   width: double.infinity,
                   fit: BoxFit.cover,

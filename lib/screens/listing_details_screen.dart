@@ -38,7 +38,7 @@ class _ListingDetailsScreenState extends State<ListingDetailsScreen> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Image.network(
-                  widget.listing.imageUrl,
+                  widget.listing.thumbnailUrl1,
                   height: 250,
                   width: double.infinity,
                   fit: BoxFit.cover,

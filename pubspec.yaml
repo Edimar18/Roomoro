@@ -46,6 +46,8 @@ dependencies:
   flutter_facebook_auth: ^7.1.2 # [1]
   url_launcher: ^6.2.6
   timeago: ^3.6.1
+  image_picker: ^1.2.0  # For picking images from the gallery
+  cloudinary_public: ^0.23.1 # For uploading to Cloudinary
 
 
 dev_dependencies:
