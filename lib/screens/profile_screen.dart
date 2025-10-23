@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:roomoro/screens/home_page.dart';
 import 'package:roomoro/services/firestore_service.dart';
 import 'package:roomoro/screens/welcomeScreen.dart';
 import 'package:roomoro/screens/add_listing_screen.dart';
@@ -31,7 +32,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: ()  {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                  builder: (context) => const HomePage()),
+
+            );
+          },
         ),
         title: const Text('Profile'),
         actions: [
