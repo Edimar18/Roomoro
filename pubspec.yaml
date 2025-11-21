@@ -48,6 +48,7 @@ dependencies:
   timeago: ^3.6.1
   image_picker: ^1.2.0  # For picking images from the gallery
   cloudinary_public: ^0.23.1 # For uploading to Cloudinary
+  geolocator: ^12.0.0
 
 
 dev_dependencies:

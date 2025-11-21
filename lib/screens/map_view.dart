@@ -4,7 +4,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../screens/listing_details_screen.dart';
 import '../models/room_listing.dart';
-
+import 'package:geolocator/geolocator.dart';
 
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
@@ -22,20 +22,73 @@ class _MapScreenState extends State<MapScreen> {
   RoomListing? _selectedListing; // Track which listing is selected
 
   // dummy location sa user but will update later for real location
-  final LatLng _userLocation = LatLng(8.4632, 124.6288);
+  LatLng? _userLocation;
 
   @override
   void initState() {
-    print('hello');
     super.initState();
     _mapController = MapController();
     // Fetch room data when the widget is first created
-    _fetchRoomListings();
+    _initializeData();
   }
+
+  Future<void> _initializeData() async {
+    await _getCurrentLocation(); // Wait for location first
+    await _fetchRoomListings();  // Then fetch listings
+  }
+
+  // --- NEW: FUNCTION TO GET USER'S CURRENT LOCATION ---
+  Future<void> _getCurrentLocation() async {
+    bool serviceEnabled;
+    LocationPermission permission;
+
+    // Test if location services are enabled.
+    serviceEnabled = await Geolocator.isLocationServiceEnabled();
+    if (!serviceEnabled) {
+      // Location services are not enabled, don't continue.
+      // You could show a dialog here to ask the user to enable it.
+      print('Location services are disabled.');
+      return;
+    }
+
+    permission = await Geolocator.checkPermission();
+    if (permission == LocationPermission.denied) {
+      permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied) {
+        // Permissions are denied, next time you could try asking again.
+        print('Location permissions are denied');
+        return;
+      }
+    }
+
+    if (permission == LocationPermission.deniedForever) {
+      // Permissions are denied forever, handle appropriately.
+      print('Location permissions are permanently denied, we cannot request permissions.');
+      return;
+    }
+
+    // When we reach here, permissions are granted and we can
+    // continue accessing the position of the device.
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      setState(() {
+        _userLocation = LatLng(position.latitude, position.longitude);
+      });
+      print("User location fetched: $_userLocation");
+      // Animate to the new location
+      if (_userLocation != null) {
+        _mapController.move(_userLocation!, 13.0);
+      }
+    } catch (e) {
+      print("Failed to get location: $e");
+    }
+  }
+
 
   // --- NEW: FUNCTION TO FETCH DATA FROM FIRESTORE ---
   Future<void> _fetchRoomListings() async {
-    print('00');
     // Assuming you have a collection named 'room_listings'
     final snapshot = await FirebaseFirestore.instance.collection('listings').get();
 
@@ -50,7 +103,11 @@ class _MapScreenState extends State<MapScreen> {
 
   //function for animating the map to the user's location
   void _animateToUserLocation()  {
-    _mapController.move(_userLocation, 13.0);
+    if (_userLocation == null) {
+      _getCurrentLocation();
+      return;
+    }
+    _mapController.move(_userLocation!, 13.0);
     setState(() {
       // When centering on user, hide the listing info card
       _selectedListing = null;
@@ -59,7 +116,7 @@ class _MapScreenState extends State<MapScreen> {
           Marker(
               width: 80.0,
               height: 80.0,
-              point: _userLocation,
+              point: _userLocation!,
               child: const Icon(
                 Icons.location_pin,
                 color: Colors.red,
