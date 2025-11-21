@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import '../models/room_listing.dart';
 import 'package:roomoro/services/firestore_service.dart';
 import 'package:roomoro/services/chatService.dart';
-import 'package:roomoro/screens/chat_list_screen.dart';
 import 'package:roomoro/screens/conversation_screen.dart';
 
 class ListingDetailsScreen extends StatefulWidget {

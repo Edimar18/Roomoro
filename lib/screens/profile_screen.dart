@@ -215,7 +215,6 @@ class _ProfileMenuItem extends StatelessWidget {
   final VoidCallback onTap;
 
   const _ProfileMenuItem({
-    super.key,
     required this.icon,
     required this.text,
     required this.onTap,

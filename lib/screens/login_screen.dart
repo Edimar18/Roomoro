@@ -112,17 +112,9 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
     try {
       await initGoogleSignInOnce();
-      final GoogleSignInAccount? account = await GoogleSignIn.instance.authenticate();
+      final GoogleSignInAccount account = await GoogleSignIn.instance.authenticate();
 
-      if (account == null) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Google sign-in cancelled')),
-        );
-        return;
-      }
-
-      final auth = await account.authentication;
+      final auth = account.authentication;
       final idToken = auth.idToken;
       if (idToken == null) {
         _showErrorDialog('Failed to get Google ID token.');
