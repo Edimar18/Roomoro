@@ -145,8 +145,8 @@ class _MapScreenState extends State<MapScreen> {
             print("Tapped on: ${listing.title}");
           },
           child: Icon(
-            Icons.home_outlined,
-            color: _selectedListing?.id == listing.id ? Colors.purple : Colors.blue, // Highlight selected
+            Icons.location_on,
+            color: _selectedListing?.id == listing.id ? Colors.purple : Colors.red, // Highlight selected
             size: 40.0,
           ),
         ),
