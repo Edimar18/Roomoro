@@ -76,8 +76,10 @@ class _SelectUserRoleScreenState extends State<SelectUserRoleScreen> {
 
       // Navigate to Room Seeker home screen (TODO: Create this screen)
       // For now, just show a success message
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Welcome, Room Seeker!')),
+      // Navigate to ID Verification screen
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const IDVerificationScreen()),
       );
 
       // TODO: Replace with actual navigation

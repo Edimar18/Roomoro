@@ -151,8 +151,12 @@ class _SignupScreenState extends State<SignupScreen> {
       _isLoading = true;
     });
 
+    if (!mounted) return;
+
+    UserCredential? credential;
+
     try {
-      final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
@@ -160,12 +164,18 @@ class _SignupScreenState extends State<SignupScreen> {
       // Update display name
       await credential.user?.updateDisplayName(_fullNameController.text.trim());
 
-      // Save user to Firestore
+      // Save user to Firestore with error handling
       if (credential.user != null) {
-        await _firestoreService.saveUser(
-          user: credential.user!,
-          fullName: _fullNameController.text.trim(),
-        );
+        try {
+          await _firestoreService.saveUser(
+            user: credential.user!,
+            fullName: _fullNameController.text.trim(),
+          );
+        } catch (firestoreError) {
+          // If Firestore fails, delete the auth user to maintain consistency
+          await credential.user?.delete();
+          throw Exception('Failed to save user data: $firestoreError');
+        }
       }
 
       if (mounted) {
@@ -185,7 +195,7 @@ class _SignupScreenState extends State<SignupScreen> {
       }
       _showErrorDialog(errorMessage);
     } catch (e) {
-      _showErrorDialog('Something went wrong. Please try again later.');
+      _showErrorDialog('Something went wrong: ${e.toString()}');
     } finally {
       if (mounted) {
         setState(() {
